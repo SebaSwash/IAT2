@@ -3,13 +3,18 @@
 # Ejercicio 2: Clasificador y predictor de forma unificada
 # Sebastián Ignacio Toro Severino (sebastian.toro1@mail.udp.cl)
 # ------------------------------------------
-import sys
-import numpy as np
+import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, confusion_matrix
-        
+from sklearn.preprocessing import StandardScaler
+
+# Creación del directorio outputs en caso de que no exista
+if not os.path.exists('./outputs'):
+    os.mkdir('./outputs')
+
+scaler = StandardScaler()
 output_file = open('./outputs/results_ej2.txt', 'w')
 DATASET_FILEPATH = './datasets/nasa.csv'
 
@@ -54,8 +59,10 @@ def print_train_test_sets(x_train, x_test, y_train, y_test):
 # Función para imprimir por terminal (y en archivo) los resultados de la predicción
 def print_prediction_stats(y_test, y_pred):
 
-    print('-------------------------- Comparación de valores (obtenido vs real) --------------------------')
+    print_both(output_file, '-------------------------- Comparación de valores (obtenido vs real) --------------------------')
 
+    print_both(output_file, '')
+    print_both(output_file, 'Etiqueta predicha  Etiqueta real')
     for pred, real in zip(y_pred, y_test):
         print_both(output_file, str(pred) + '\t' + str(real))
     
@@ -66,6 +73,15 @@ def print_prediction_stats(y_test, y_pred):
     print_both(output_file, classification_report(y_test, y_pred))
     print_both(output_file, confusion_matrix(y_test, y_pred))
 
+    # Se obtienen e imprimen todos los casos de la matriz de confusión
+    tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+
+    print_both(output_file, '')
+    print_both(output_file, '- Verdaderos negativos: ' + str(tn))
+    print_both(output_file, '- Falsos positivos: ' + str(fp))
+    print_both(output_file, '- Falsos negativos: ' +str(fn))
+    print_both(output_file, '- Verdaderos positivos: ' +str(tp))
+
 
 # Función para imprimir texto en terminal y además almacenar en un archivo
 def print_both(file, *args):
@@ -74,7 +90,7 @@ def print_both(file, *args):
     file.write(to_print + '\n')
 
 if __name__ == '__main__':
-    columns = [27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39] # Índices de las columnas a filtrar
+    columns = [3, 4, 13, 16, 24, 29, 31, 32, 37, 39] # Índices de las columnas a filtrar
     dataset = pd.read_csv(DATASET_FILEPATH, usecols=columns) # Se carga el dataset según las columnas
 
     # Se imprimen las características del dataset
@@ -83,12 +99,17 @@ if __name__ == '__main__':
     # Separación de dataset y obtención de los sets de entrenamiento y prueba
     x_train, x_test, y_train, y_test = split_dataset(dataset)
 
+    # Se estandarizan los valores de los sets de entrenamiento y pruebas
+    scaler.fit(x_train)
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+
     # Se imprimen los sets de entrenamiento y prueba
     print_train_test_sets(x_train, x_test, y_train, y_test)
 
     # Instancia de un clasificador KNN, en donde se especifica la métrica de distancia euclidiana
     # y la cantidad de vecinos a considerar
-    classifier = KNeighborsClassifier(n_neighbors=3, metric='euclidean')
+    classifier = KNeighborsClassifier(n_neighbors=7, metric='euclidean')
 
     # Entrenamiento del clasificador
     classifier.fit(x_train, y_train)
@@ -100,4 +121,4 @@ if __name__ == '__main__':
     # Se imprime el estado de la predicción y la comparación de etiquetas
     print_prediction_stats(y_test, y_pred)
 
-    output_file.close()
+    output_file.close() # Se cierra el archivo de resultados
