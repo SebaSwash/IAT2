@@ -4,6 +4,7 @@
 # Sebastián Ignacio Toro Severino (sebastian.toro1@mail.udp.cl)
 # ------------------------------------------
 import os
+import time
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
@@ -55,6 +56,7 @@ def print_train_test_sets(x_train, x_test, y_train, y_test):
     print_both(output_file, '-------------------------- Set de prueba --------------------------')
     print_both(output_file, x_test)
     print_both(output_file, y_test)
+    print_both(output_file, '')
 
 # Función para imprimir por terminal (y en archivo) los resultados de la predicción
 def print_prediction_stats(y_test, y_pred):
@@ -62,7 +64,7 @@ def print_prediction_stats(y_test, y_pred):
     print_both(output_file, '-------------------------- Comparación de valores (obtenido vs real) --------------------------')
 
     print_both(output_file, '')
-    print_both(output_file, 'Etiqueta predicha  Etiqueta real')
+    print_both(output_file, 'Etiqueta predicha vs Etiqueta real')
     for pred, real in zip(y_pred, y_test):
         print_both(output_file, str(pred) + '\t' + str(real))
     
@@ -81,6 +83,7 @@ def print_prediction_stats(y_test, y_pred):
     print_both(output_file, '- Falsos positivos: ' + str(fp))
     print_both(output_file, '- Falsos negativos: ' +str(fn))
     print_both(output_file, '- Verdaderos positivos: ' +str(tp))
+    print_both(output_file, '')
 
 
 # Función para imprimir texto en terminal y además almacenar en un archivo
@@ -109,16 +112,30 @@ if __name__ == '__main__':
 
     # Instancia de un clasificador KNN, en donde se especifica la métrica de distancia euclidiana
     # y la cantidad de vecinos a considerar
+
+    # Se mide el inicio del tiempo para el proceso del clasificador
+    start_time = time.time()
+
     classifier = KNeighborsClassifier(n_neighbors=7, metric='euclidean')
 
     # Entrenamiento del clasificador
     classifier.fit(x_train, y_train)
 
+    # Tiempo de finalización para el clasificador
+    classifier_end_time = time.time()
+
     # Se realiza la predicción del set de prueba en el modelo entrenado
     # obteniendo la lista de predicciones
     y_pred = classifier.predict(x_test)
 
+    # Se marca el tiempo del término del clasificador y predicción realizada
+    total_end_time = time.time()
+
     # Se imprime el estado de la predicción y la comparación de etiquetas
     print_prediction_stats(y_test, y_pred)
+
+    print_both(output_file, '- Tiempo de ejecución total (clasificación + predicción): ' + str(total_end_time - start_time) + ' seg')
+    print_both(output_file, '- Tiempo de ejecución de la clasificación: ' + str(classifier_end_time - start_time) + ' seg')
+    print_both(output_file, '- Tiempo de ejecución de la predicción: ' + str(total_end_time - classifier_end_time) + ' seg')
 
     output_file.close() # Se cierra el archivo de resultados
